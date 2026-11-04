@@ -1,0 +1,23 @@
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: spedice_nedojel_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: spedice_nedojel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./sql/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spedice_nedojel"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
