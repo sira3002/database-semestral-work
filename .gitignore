@@ -1,0 +1,25 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python virtual environments & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# Database data persistence & scratch files
+pgdata/
+*.log
+*.tmp
+/scratch/

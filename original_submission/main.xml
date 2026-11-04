@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="./sproject_html.xsl"?>
+<!DOCTYPE sproject SYSTEM "sproject.dtd">
+<sproject>
+    <course database="Oracle" version="11">
+        <cname>Databázové systémy</cname>
+            <code>BI-DBS.21</code>
+            <semester>B242</semester>
+            <seminar>Čtvrtek 18:00, Lichý týden, paralelka 1250788079305</seminar>
+    </course>
+        <author>
+            <aname>Matěj Široký</aname>
+            <uname>sirokmat</uname>
+            <email>sirokmat@fit.cvut.cz</email>
+        </author>
+    <content>
+        <declaration>I declare that I have developed my semestral work independently. All the sources I used are listed in the section References.</declaration>
+            <title>Spedice Nedojel</title>
+        <description>
+            <title>Popis</title>
+                    <para>Spediční firma Nedojel se specializuje na přepravu nákladů pomocí tahačů s různými typy návěsů. Klíčovým prvkem naší evidence jsou **zakázky**, které představují jednotlivé přepravní úkoly. Každá zakázka musí mít jednoznačný identifikátor a sledujeme u ní mimo jiné datum zadání, cenu, nebo podrobnosti o **nákladu**.  Náklad může být rozdělen do více zásilek, kde každá má svého **řidiče**, **tahač**, **návěs** a **trasu**, po které se přeprava uskuteční. V plánované trase pak budou obsaženy plánované povinné zastávky k odpočinku řidiče a zároveň informace o vybavenosti místa(WC, sprcha, nabíjecí stanice, ...). Dále u zakázek evidujeme termín odjezdu z firmy a plánovaný termín návratu, aby bylo možné sledovat dostupnost řidičů.</para>
+                    <para></para>
+                    <para>**Zákazníkem** může být buď ***právnická osoba***, nebo ***fyzická osoba*** a každý ze zákazníků má pevně přiřazené unikátní číslo zákazníka. U právnických osob evidujeme název společnosti, identifikační číslo (IČO), fakturační údaje, kontaktní osobu a kontaktní údaje. U fyzických osob evidujeme jejich jméno, příjmení, v případě podnikatelů identifikační číslo (IČO), fakturační údaje a kontaktní telefon a e-mail. Každý zákazník může mít v systému více zakázek, a naopak jedna zakázka se vždy vztahuje k jednomu konkrétnímu zákazníkovi.</para>
+                    <para></para>
+                    <para>**Tahače** evidujeme s unikátním identifikačním číslem, značkou, modelem, rokem výroby a také státní poznávací značkou (SPZ). Sledujeme jejich typ pohonu – tedy zda jsou poháněny naftou, nebo elektřinou. Dále je pro nás klíčová spotřeba a kolik tun nákladu je každý tahač schopen utáhnout, což ovlivňuje výběr vhodného návěsu a přepravovaného nákladu.  </para>
+                    <para></para>
+                    <para>**Řidiči** jsou důležitou součástí firmy, a proto u nich evidujeme osobní číslo, které je po celou dobu jejich zaměstnání neměnné. Dále sledujeme jejich jméno, adresu, plat, rodé číslo, datum narození a datum vypršení řidičského oprávnění.</para>
+                    <para></para>
+                    <para>**Návěsy** jsou dalším nezbytným prvkem přepravy a ke každému z nich evidujeme unikátní identifikační číslo, výrobce, typ nákladu který může být přepravován, hmotnost a také nosnost. </para>
+                    <para></para>
+                    <para>Protože tahače i návěsy podléhají opotřebení, firma vede **servisní historii**. Každý servisní záznam obsahuje *datum provedení*, typ opravy a evidenci nákladů na servis. Servis může být proveden jak na tahači, tak na návěsu. Do servisní historie zároveň zaznamenáváme i preventivní prohlídky.</para>
+                    <para></para>
+                    <para>Klíčovou součástí přepravy jsou **trasy**, kterými se jednotlivé zakázky realizují. Každá trasa obsahuje počáteční a koncový bod, plánovanou ujetou vzdálenost a plánovaný čas jízdy.</para>
+                    <para></para>
+                    <para>Zároveň je důležité pro efektivní fungování sbírat **data o tankování či nabíjení**. Každý záznam zde bude obsahovat id tahače, datum, jméno čerpací či dobíjecí stanice, cenu a celkový počet kilometrů tahače. U ***tankování*** následně chceme znát cenu za litr a počet natankovaných litrů. U ***nabíjení*** pak evidujeme množství odebrané elektrické energie, cenu za kWh a také dobu, kterou tahač strávil na nabíječce.</para>
+        </description>
+        <data_model>
+            <title>Conceptual schema</title>
+            <dm_picture>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="conceptual_schema.png"/>
+                    </imageobject>
+                </mediaobject>
+            </dm_picture>
+            <dm_discussion>
+                        <para>**1:** Smyčka, která nás dovedek entitě **Zastavka** ze strany entity **Pauza** a **Trasa** by měla být v pořádku, protože zastávka může být součástí trasy a zároveň místo pauzy. V ideálním případě by dokonce bylo žádoucí, aby všechny zastávky vázané k pauze byly taktéž obsaženy v trase.</para>
+                        <para>**2:** Ve všech případech, kde se do smyčky dostává **Adresa** skutečně připouštíme, že se tato adresa může vyskytnout ve více vazbách zároveň.</para>
+                        <para>**3:** U **Servisni_historie** máme mezi vazbami XOR a tak nám zde smyčkování nemůže nastat.</para>
+                        <para></para>
+            </dm_discussion>
+        </data_model>
+        <relational_model>
+            <title>Relační schema</title>
+            <rm_picture>
+                <mediaobject>
+                    <imageobject>
+                        <imagedata fileref="relational_schema.png"/>
+                    </imageobject>
+                </mediaobject>
+            </rm_picture>
+        </relational_model>
+        <queries>
+            <title>Dotazy</title>
+            <dotazy>
+                    <dotaz dotaz_id="D1">
+                        <popis_dotazu>
+                                <para>Nejčastěji používaný tahač</para>
+                        </popis_dotazu>
+                            <sql>SELECT t.id_tahac, COUNT(*) AS pocet_zasilek
+FROM tahac t
+JOIN zasilka z ON t.id_tahac = z.id_tahac
+GROUP BY t.id_tahac
+ORDER BY pocet_zasilek DESC
+LIMIT 1;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D2">
+                        <popis_dotazu>
+                                <para>Jméno nejmladšího řidiče. </para>
+                        </popis_dotazu>
+                            <sql>SELECT jmeno
+FROM ridic
+ORDER BY datum_narozeni DESC
+LIMIT 1;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D3">
+                        <popis_dotazu>
+                                <para>Seznam všech značek tahačů, které firma vlastní</para>
+                        </popis_dotazu>
+                            <relacni_algebra>tahac[znacka]</relacni_algebra>
+                            <sql>SELECT DISTINCT znacka FROM tahac</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D4">
+                        <popis_dotazu>
+                                <para>Vyber tahače, na kterých byly provedeny všechny servisní úkony</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{{servisni_ukon_servisni_historie * servisni_historie}[id_tahac,id_ukon]÷servisni_ukon[id_ukon]} * tahac</relacni_algebra>
+                            <sql>SELECT * FROM tahac t
+WHERE NOT EXISTS(
+    SELECT * FROM SERVISNI_UKON su
+    WHERE NOT EXISTS (
+        SELECT 1 FROM SERVISNI_UKON_SERVISNI_HISTORIE shu
+        JOIN SERVISNI_HISTORIE sh USING(id_servis)
+        WHERE sh.id_tahac = t.id_tahac AND su.id_ukon = shu.id_ukon
+    )
+)</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D5">
+                        <popis_dotazu>
+                                <para>Vyber návěsy, které mohou přepravovat pouze náklad 15 (kapaliny)</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{naves&lt;naves.id_naves = typ_nakladu_naves.id_naves]typ_nakladu_naves(id_ntyp = 15)}
+\
+{naves&lt;naves.id_naves = typ_nakladu_naves.id_naves]typ_nakladu_naves(id_ntyp != 15)}</relacni_algebra>
+                            <sql>SELECT n.*
+FROM NAVES n
+JOIN TYP_NAKLADU_NAVES tnn USING(id_naves) 
+WHERE tnn.id_ntyp=15
+EXCEPT
+SELECT n.*
+FROM NAVES n
+JOIN TYP_NAKLADU_NAVES tnn USING(id_naves) 
+WHERE tnn.id_ntyp!=15</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D6">
+                        <popis_dotazu>
+                                <para>Celková doba odpočinku řidiče 5 od 2.12.2024 do 9.12.2024</para>
+                        </popis_dotazu>
+                    </dotaz>
+                    <dotaz dotaz_id="D7">
+                        <popis_dotazu>
+                                <para>Počet zakázek od zákazníka s id 1</para>
+                        </popis_dotazu>
+                            <sql>SELECT id_zakaznik, COUNT(*) AS pocet_zakazek FROM zakazka WHERE id_zakaznik = 1 GROUP BY id_zakaznik</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D8">
+                        <popis_dotazu>
+                                <para>Vypiš ke každému zákazníkovi počet zakázek které zadal. Zákazníky seřaď podle počtu zakázek od největšího.</para>
+                        </popis_dotazu>
+                            <sql>SELECT *, (SELECT COUNT(*) FROM zakazka zak WHERE  z.id_zakaznik= zak.id_zakaznik) AS pocet_zakazek
+FROM zakaznik z
+ORDER BY pocet_zakazek DESC;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D10">
+                        <popis_dotazu>
+                                <para>Id, značka a model tahače, který ještě nebyl v servisu.</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{tahac * {tahac[id_tahac] \ servisni_historie[id_tahac]}}[id_tahac,znacka,model]</relacni_algebra>
+                            <sql>SELECT t.id_tahac, t.znacka, t.model
+FROM TAHAC t
+LEFT JOIN SERVISNI_HISTORIE sh USING(id_tahac)
+WHERE sh.id_tahac IS NULL;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D11">
+                        <popis_dotazu>
+                                <para>Zakázky, které mají datum zahájení v letošním roce(2025).</para>
+                        </popis_dotazu>
+                            <relacni_algebra>Zakazka(zadano_dne &gt; &apos;31.12.2024&apos; ∧ zadano_dne &lt; &apos;01.01.2026&apos;)</relacni_algebra>
+                            <sql>SELECT *
+FROM ZAKAZKA
+WHERE zadano_dne &gt; TO_DATE(&apos;31.12.2024&apos;,&apos;dd.mm.yyyy&apos;) AND zadano_dne &lt; TO_DATE(&apos;01.01.2026&apos;,&apos;dd.mm.yyyy&apos;);</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D12">
+                        <popis_dotazu>
+                                <para>Všechny návěsy, které jsou určeny pro převoz nebezpečného zboží.
+typ_nakladu.nazev=&apos;Nebezpečný náklad (ADR)&apos;</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{naves [naves.id_naves=typ_nakladu_naves.id_naves] 
+    {typ_nakladu_naves [typ_nakladu_naves.id_ntyp = typ_nakladu.id_ntyp] 
+        typ_nakladu (nazev=&apos;Nebezpečný náklad (ADR)&apos;)
+    }
+}[naves.id_naves, naves.vyrobce, typ_nakladu.nazev]</relacni_algebra>
+                            <sql>SELECT n.id_naves, n.vyrobce, tn.nazev FROM NAVES n 
+JOIN TYP_NAKLADU_NAVES tnn USING(id_naves) 
+JOIN TYP_NAKLADU tn USING(id_ntyp) 
+WHERE tn.nazev=&apos;Nebezpečný náklad (ADR)&apos;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D13">
+                        <popis_dotazu>
+                                <para>Servisní úkony, které nebyly provedeny na tahači 14(id_tahac=14)</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{servisni_ukon}
+\
+{{servisni_historie(id_tahac = 14) [servisni_historie.id_servis = servisni_ukon_servisni_historie.id_servis]servisni_ukon_servisni_historie} 
+[servisni_ukon_servisni_historie.id_ukon = servisni_ukon.id_ukon&gt; 
+servisni_ukon
+}</relacni_algebra>
+                            <sql>SELECT * FROM SERVISNI_UKON su
+EXCEPT
+SELECT DISTINCT sup.* FROM SERVISNI_HISTORIE sh
+JOIN SERVISNI_UKON_SERVISNI_HISTORIE suh USING(id_servis)
+JOIN SERVISNI_UKON sup USING(id_ukon) 
+WHERE sh.id_tahac=(
+                    SELECT t.id_tahac FROM tahac t
+                    WHERE NOT EXISTS(
+                        SELECT * FROM SERVISNI_UKON su
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM SERVISNI_UKON_SERVISNI_HISTORIE shu
+                            JOIN SERVISNI_HISTORIE sh USING(id_servis)
+                            WHERE sh.id_tahac = t.id_tahac AND su.id_ukon = shu.id_ukon
+                        )
+                    )
+);</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D14">
+                        <popis_dotazu>
+                                <para>Vypiš tahač, který nikdy nebyl přiřazen k žádné zásilce</para>
+                        </popis_dotazu>
+                            <relacni_algebra>zasilka !*&gt; tahac</relacni_algebra>
+                            <sql>SELECT * FROM TAHAC WHERE id_tahac NOT IN (
+    SELECT id_tahac FROM ZASILKA
+)</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D15">
+                        <popis_dotazu>
+                                <para>Najdi id_trasa a jméno řidiče, která začíná u něj doma</para>
+                        </popis_dotazu>
+                            <relacni_algebra>{trasa [trasa.adresa_start = ridic.id_adresa] ridic}
+[id_trasa, jmeno]</relacni_algebra>
+                            <sql>SELECT t.id_trasa, r.jmeno FROM TRASA t JOIN RIDIC r ON r.id_adresa = t.adresa_start </sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D16">
+                        <popis_dotazu>
+                                <para>Vypiš jaké všechny soupravy lze vytvořit (kombinace tahače a návěsu)</para>
+                        </popis_dotazu>
+                            <relacni_algebra>tahac
+×
+naves</relacni_algebra>
+                            <sql>SELECT *
+FROM TAHAC
+CROSS JOIN NAVES;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D17">
+                        <popis_dotazu>
+                                <para>Zobraz všechny tahače a servisní záznamy spolu s počtem servisních úkonů v jednotlivých servisních záznamech.
+Pokud tahač nikdy v servisu nebyl, zobraz pouze tahač a pokud servis byl proveden na jiném vozidle než na tahači, tak zobraz pouze údaje o servisu.
+Následně seřaď vzestupně podle poču provedených úkonů.</para>
+                        </popis_dotazu>
+                            <sql>SELECT x.id_servis, x.pocet_ukonu, t.id_tahac, t.znacka
+FROM 
+(SELECT s.id_servis, s.id_tahac, COUNT(*) AS pocet_ukonu 
+ FROM servisni_historie s JOIN servisni_ukon_servisni_historie su USING(id_servis) 
+ GROUP BY id_servis
+) x
+FULL OUTER JOIN tahac t ON x.id_tahac = t.id_tahac
+ORDER BY x.pocet_ukonu ASC;
+
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D18">
+                        <popis_dotazu>
+                                <para>Vyber zákazníky, kteří odeslali alespoň 3 zásilky a jejich průměrná hmotnost zásilek je vyšší než průměrná hmotnost zásilek všech zákazníků dohromady a zároveň zákazník je právnická osoba a sídlí v česku(stat=&apos;Česká republika&apos;). Výsledky seřaď sestupně podle průměrné hmotnosti.</para>
+                        </popis_dotazu>
+                            <sql>SELECT zak.id_zakaznik, COUNT(*) AS pocet_zasilek, AVG(z.hmotnost) AS prumerna_hmotnost
+FROM zasilka z JOIN zakazka zak USING(id_zakazka) JOIN pravnicka_osoba po USING (id_zakaznik) JOIN adresa a USING (id_adresa) where a.stat=&apos;Česká republika&apos;
+GROUP BY zak.id_zakaznik
+HAVING COUNT(*) &gt;= 3
+   AND AVG(z.hmotnost) &gt; (
+       SELECT AVG(z2.hmotnost)
+       FROM zasilka z2
+   )
+ORDER BY AVG(z.hmotnost) DESC;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D19">
+                        <popis_dotazu>
+                                <para>Ke každému řidiči vypiš počet odvezených zásilek. </para>
+                        </popis_dotazu>
+                            <sql>SELECT *, (SELECT COUNT(*) FROM zasilka z WHERE r.id_ridic = z.id_ridic) AS pocet_zasilek
+FROM ridic r;
+
+SELECT r.*, COUNT(*) AS pocet_zasilek 
+FROM ridic r JOIN zasilka USING (id_ridic) 
+GROUP BY id_ridic
+UNION
+SELECT *, 0 AS pocet_zasilek 
+FROM (
+    SELECT r.* 
+    FROM ridic r 
+    EXCEPT (
+        SELECT DISTINCT ri.* 
+        FROM ridic ri 
+        JOIN zasilka USING (id_ridic)
+        ) 
+    );
+
+SELECT r.*, COALESCE(p.pocet_zasilek, 0) AS pocet_zasilek
+FROM ridic r
+LEFT JOIN (
+    SELECT id_ridic, COUNT(*) AS pocet_zasilek
+    FROM zasilka
+    GROUP BY id_ridic
+) p ON r.id_ridic = p.id_ridic;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D20">
+                        <popis_dotazu>
+                                <para>Řidiči, kteří vezli nebezpečný náklad i elektroniku</para>
+                        </popis_dotazu>
+                            <sql>SELECT r.* 
+FROM ridic r 
+JOIN zasilka USING (id_ridic) 
+JOIN naklad USING(id_zakazka) 
+JOIN typ_nakladu tn USING (id_ntyp) 
+WHERE tn.nazev = &apos;Elektronika&apos;
+
+INTERSECT
+
+SELECT r.* 
+FROM ridic r 
+JOIN zasilka USING (id_ridic) 
+JOIN naklad USING(id_zakazka) 
+JOIN typ_nakladu tn USING (id_ntyp) 
+WHERE tn.nazev = &apos;Nebezpečný náklad (ADR)&apos;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D21">
+                        <popis_dotazu>
+                                <para>View zásilek s nebezpečným nákladem.</para>
+                        </popis_dotazu>
+                            <sql>CREATE OR REPLACE VIEW nebezpecne_zakazky AS
+SELECT z.* FROM zasilka z JOIN naklad USING(id_zakazka) JOIN typ_nakladu tn USING(id_ntyp) WHERE tn.nazev = &apos;Nebezpečný náklad (ADR)&apos;;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D22">
+                        <popis_dotazu>
+                                <para>Vyber tahače, které přepravovali nebezpečný náklad</para>
+                        </popis_dotazu>
+                            <sql>-- Pro případ že by view neexistovalo
+CREATE OR REPLACE VIEW nebezpecne_zakazky AS
+SELECT z.* FROM zasilka z JOIN naklad USING(id_zakazka) JOIN typ_nakladu tn USING(id_ntyp) WHERE tn.nazev = &apos;Nebezpečný náklad (ADR)&apos;;
+--
+
+SELECT t.* FROM tahac t JOIN nebezpecne_zakazky USING (id_tahac) ;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D23">
+                        <popis_dotazu>
+                                <para>Nový  řidič má shodné údaje s řidičem s nejvyšším id_ridic</para>
+                        </popis_dotazu>
+                            <sql>BEGIN;
+SELECT * FROM ridic;
+INSERT INTO ridic (id_adresa, jmeno, prijmeni, datum_narozeni)
+SELECT id_adresa, jmeno, prijmeni, datum_narozeni FROM ridic ORDER BY id_ridic DESC LIMIT 1;
+SELECT * FROM ridic;
+ROLLBACK;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D24">
+                        <popis_dotazu>
+                                <para>Zvýšení nákladů o 2000 na každé zakázce, kde některou zásliku převážel řidič s id 3.</para>
+                        </popis_dotazu>
+                            <sql>BEGIN;
+SELECT naklady FROM zakazka JOIN zasilka USING(id_zakazka) WHERE id_ridic = 3;
+UPDATE zakazka SET naklady = naklady + 2000 
+WHERE id_zakazka IN 
+(SELECT id_zakazka FROM zasilka WHERE id_ridic = 3);
+SELECT naklady FROM zakazka JOIN zasilka USING(id_zakazka) WHERE id_ridic = 3;
+ROLLBACK;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D25">
+                        <popis_dotazu>
+                                <para>Odstraň řidiče, kteří ještě neodvezli žádnou zásilku.</para>
+                        </popis_dotazu>
+                            <sql>BEGIN;
+SELECT * FROM ridic;
+DELETE FROM ridic WHERE id_ridic IN (
+SELECT id_ridic FROM ridic EXCEPT (SELECT id_ridic FROM ridic JOIN zasilka USING(id_ridic)));
+select * FROM ridic;
+ROLLBACK;</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D26">
+                        <popis_dotazu>
+                                <para>Vyber TOP 3 zákazníky s největší celkovou přepravenou hmotností</para>
+                        </popis_dotazu>
+                            <sql>SELECT id_zakaznik, SUM(hmotnost) AS celkova_hmotnost
+FROM zasilka JOIN zakazka USING(id_zakazka)
+GROUP BY id_zakaznik
+ORDER BY celkova_hmotnost DESC
+LIMIT 3;
+</sql>
+                    </dotaz>
+                    <dotaz dotaz_id="D27">
+                        <popis_dotazu>
+                                <para>Návěsy, které mohou přepravovat více typů nákladu</para>
+                        </popis_dotazu>
+                            <sql>SELECT id_naves, count(*) AS pocet_typu
+FROM typ_nakladu_naves
+GROUP BY id_naves
+HAVING COUNT(*) &gt; 1
+ORDER BY pocet_typu DESC
+</sql>
+                    </dotaz>
+            </dotazy>
+            <pokryti_dotazu>
+                        <radek>
+                            <kategorie>A</kategorie>
+                            <odkazy>
+                                    <link url="#D1">D1</link>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D10">D10</link>
+                                    <link url="#D12">D12</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D15">D15</link>
+                                    <link url="#D17">D17</link>
+                                    <link url="#D18">D18</link>
+                                    <link url="#D19">D19</link>
+                                    <link url="#D20">D20</link>
+                                    <link url="#D21">D21</link>
+                                    <link url="#D22">D22</link>
+                                    <link url="#D24">D24</link>
+                                    <link url="#D25">D25</link>
+                                    <link url="#D26">D26</link>
+                            </odkazy>
+                            <kategorie_popis>A - Pozitivní dotaz nad spojením alespoň dvou tabulek</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>AR</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D10">D10</link>
+                                    <link url="#D12">D12</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D15">D15</link>
+                            </odkazy>
+                            <kategorie_popis>A (RA) - Pozitivní dotaz nad spojením alespoň dvou tabulek</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>B</kategorie>
+                            <odkazy>
+                                    <link url="#D14">D14</link>
+                            </odkazy>
+                            <kategorie_popis>B - Negativní dotaz nad spojením alespoň dvou tabulek</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>C</kategorie>
+                            <odkazy>
+                                    <link url="#D5">D5</link>
+                            </odkazy>
+                            <kategorie_popis>C - Vyber ty, kteří mají vztah POUZE k ...</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>D1</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                            </odkazy>
+                            <kategorie_popis>D1 - Vyber ty, kteří/které jsou ve vztahu se všemi - dotaz s univerzální kvantifikací</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>D2</kategorie>
+                            <odkazy>
+                                    <link url="#D13">D13</link>
+                            </odkazy>
+                            <kategorie_popis>D2 - Kontrola výsledku dotazu z kategorie D1</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F1</kategorie>
+                            <odkazy>
+                                    <link url="#D1">D1</link>
+                                    <link url="#D15">D15</link>
+                            </odkazy>
+                            <kategorie_popis>F1 - JOIN ON</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F1R</kategorie>
+                            <odkazy>
+                                    <link url="#D15">D15</link>
+                            </odkazy>
+                            <kategorie_popis>F1 (RA) - JOIN ON</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F2</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D5">D5</link>
+                                    <link url="#D10">D10</link>
+                                    <link url="#D12">D12</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D17">D17</link>
+                                    <link url="#D18">D18</link>
+                                    <link url="#D19">D19</link>
+                                    <link url="#D20">D20</link>
+                                    <link url="#D21">D21</link>
+                                    <link url="#D22">D22</link>
+                                    <link url="#D24">D24</link>
+                                    <link url="#D25">D25</link>
+                                    <link url="#D26">D26</link>
+                            </odkazy>
+                            <kategorie_popis>F2 - NATURAL JOIN|JOIN USING</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F2R</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D5">D5</link>
+                                    <link url="#D10">D10</link>
+                                    <link url="#D12">D12</link>
+                                    <link url="#D13">D13</link>
+                            </odkazy>
+                            <kategorie_popis>F2 (RA) - NATURAL JOIN|JOIN USING</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F3</kategorie>
+                            <odkazy>
+                                    <link url="#D16">D16</link>
+                            </odkazy>
+                            <kategorie_popis>F3 - CROSS JOIN</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F4</kategorie>
+                            <odkazy>
+                                    <link url="#D10">D10</link>
+                                    <link url="#D19">D19</link>
+                            </odkazy>
+                            <kategorie_popis>F4 - LEFT|RIGHT OUTER JOIN</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F4R</kategorie>
+                            <odkazy>
+                                    <link url="#D10">D10</link>
+                            </odkazy>
+                            <kategorie_popis>F4 (RA) - LEFT|RIGHT OUTER JOIN</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>F5</kategorie>
+                            <odkazy>
+                                    <link url="#D17">D17</link>
+                            </odkazy>
+                            <kategorie_popis>F5 - FULL (OUTER) JOIN</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>G1</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D14">D14</link>
+                                    <link url="#D24">D24</link>
+                                    <link url="#D25">D25</link>
+                            </odkazy>
+                            <kategorie_popis>G1 - Vnořený dotaz v klauzuli WHERE</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>G1R</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D14">D14</link>
+                            </odkazy>
+                            <kategorie_popis>G1 (RA) - Vnořený dotaz v klauzuli WHERE</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>G2</kategorie>
+                            <odkazy>
+                                    <link url="#D17">D17</link>
+                                    <link url="#D19">D19</link>
+                            </odkazy>
+                            <kategorie_popis>G2 - Vnořený dotaz v klauzuli FROM</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>G3</kategorie>
+                            <odkazy>
+                                    <link url="#D8">D8</link>
+                                    <link url="#D19">D19</link>
+                            </odkazy>
+                            <kategorie_popis>G3 - Vnořený dotaz v klauzuli SELECT</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>G4</kategorie>
+                            <odkazy>
+                                    <link url="#D4">D4</link>
+                                    <link url="#D13">D13</link>
+                            </odkazy>
+                            <kategorie_popis>G4 - Vztažený vnořený dotaz (EXISTS, NOT EXISTS)</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>H1</kategorie>
+                            <odkazy>
+                                    <link url="#D19">D19</link>
+                            </odkazy>
+                            <kategorie_popis>H1 - Množinové sjednocení - UNION</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>H2</kategorie>
+                            <odkazy>
+                                    <link url="#D5">D5</link>
+                                    <link url="#D13">D13</link>
+                                    <link url="#D19">D19</link>
+                                    <link url="#D25">D25</link>
+                            </odkazy>
+                            <kategorie_popis>H2 - Množinový rozdíl - MINUS nebo EXCEPT</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>H2R</kategorie>
+                            <odkazy>
+                                    <link url="#D5">D5</link>
+                                    <link url="#D13">D13</link>
+                            </odkazy>
+                            <kategorie_popis>H2 (RA) - Množinový rozdíl - MINUS nebo EXCEPT</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>H3</kategorie>
+                            <odkazy>
+                                    <link url="#D20">D20</link>
+                            </odkazy>
+                            <kategorie_popis>H3 - Množinový průnik - INTERSECT</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>I1</kategorie>
+                            <odkazy>
+                                    <link url="#D1">D1</link>
+                                    <link url="#D7">D7</link>
+                                    <link url="#D8">D8</link>
+                                    <link url="#D17">D17</link>
+                                    <link url="#D18">D18</link>
+                                    <link url="#D19">D19</link>
+                                    <link url="#D26">D26</link>
+                                    <link url="#D27">D27</link>
+                            </odkazy>
+                            <kategorie_popis>I1 - Agregační funkce (count|sum|min|max|avg)</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>I2</kategorie>
+                            <odkazy>
+                                    <link url="#D1">D1</link>
+                                    <link url="#D7">D7</link>
+                                    <link url="#D17">D17</link>
+                                    <link url="#D18">D18</link>
+                                    <link url="#D19">D19</link>
+                                    <link url="#D26">D26</link>
+                                    <link url="#D27">D27</link>
+                            </odkazy>
+                            <kategorie_popis>I2 - Agregační funkce nad seskupenými řádky - GROUP BY (HAVING)</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>J</kategorie>
+                            <odkazy>
+                                    <link url="#D19">D19</link>
+                            </odkazy>
+                            <kategorie_popis>J - Stejný dotaz ve třech různých formulacích SQL</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>K</kategorie>
+                            <odkazy>
+                                    <link url="#D18">D18</link>
+                            </odkazy>
+                            <kategorie_popis>K - Všechny klauzule v 1 dotazu - SELECT FROM WHERE GROUP BY HAVING ORDER BY</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>L</kategorie>
+                            <odkazy>
+                                    <link url="#D21">D21</link>
+                                    <link url="#D22">D22</link>
+                            </odkazy>
+                            <kategorie_popis>L - VIEW</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>M</kategorie>
+                            <odkazy>
+                                    <link url="#D22">D22</link>
+                            </odkazy>
+                            <kategorie_popis>M - Dotaz nad pohledem</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>N</kategorie>
+                            <odkazy>
+                                    <link url="#D23">D23</link>
+                            </odkazy>
+                            <kategorie_popis>N - INSERT, který vloží do některé tabulky množinu řádků, které jsou vybrány dotazem z vybraných tabulek (příkaz INSERT, ve kterém je klauzule VALUES nahrazena vnořeným poddotazem.</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>O</kategorie>
+                            <odkazy>
+                                    <link url="#D24">D24</link>
+                            </odkazy>
+                            <kategorie_popis>O - UPDATE s vnořeným SELECT příkazem</kategorie_popis>
+                        </radek>
+                        <radek>
+                            <kategorie>P</kategorie>
+                            <odkazy>
+                                    <link url="#D25">D25</link>
+                            </odkazy>
+                            <kategorie_popis>P - DELETE s vnořeným SELECT příkazem</kategorie_popis>
+                        </radek>
+            </pokryti_dotazu>
+        </queries>
+        <scripts>
+            <title>Scripts</title>
+            <para>
+                <link url="./create.sql">create.sql</link>
+            </para>
+            <para>
+                <link url="./insert.sql">insert.sql</link>
+            </para>
+        </scripts>
+        <conclussions>
+            <title>Závěr</title>
+                    <para>Když se na svou práci dívám zpětně, mám k ní několik postřehů. Téma databáze pro sledování přepravních zakázek jsem si vybral, protože mi přišlo zajímavé a prakticky využitelné. Ukázalo se však jako poměrně rozsáhlé, což se projevilo zejména množstvím entit, které bylo potřeba postupně přidávat, aby výsledná databáze alespoň vzdáleně připomínala reálnou implementaci takového systému. Pro skutečné nasazení by samozřejmě bylo nutné návrh dále upravit a rozšířit, nicméně pro základní demonstraci tento návrh postačuje.</para>
+                    <para></para>
+                    <para>Velkou výzvou bylo generování testovacích dat. Snažil jsem se, aby data dávala alespoň částečně smysl a nepůsobila zcela náhodně, což vyžadovalo nemalé množství úprav, kontrol a logického provázání mezi jednotlivými tabulkami.</para>
+                    <para></para>
+                    <para>Za velmi přínosné považuji požadavky na celou škálu různých dotazů. Nejenže mě to vedlo k hledání různých otázek, na které se lze nad databází dotazovat, ale často mě to přimělo nahlédnout na stejný problém z jiné perspektivy a vyzkoušet více způsobů jeho řešení.</para>
+                    <para></para>
+                    <para>Celkově jsem si díky této práci prohloubil své znalosti databázového návrhu i jazyka SQL a zároveň jsem získal lepší představu o praktickém fungování relační algebry.</para>
+                    <para></para>
+        </conclussions>
+        <references>
+            <title>Zdroje</title>
+                    <para>https://md.gov.cz/Zivotni-situace/Silnicni-doprava/Mezinarodni-osobni-doprava-(2)/Legislativa-a-casto-kladene-dotazy/Rezim-ridicu</para>
+                    <para>https://chatgpt.com/</para>
+                    <para>https://gemini.google.com/</para>
+                    <para>https://www.mockaroo.com/</para>
+                    <para>Věci dostupné na stránkách předmětu, a to ať už samotný obsah stránek, vzorové práce, výuková videa a nebo záznamy z proseminářů. - https://courses.fit.cvut.cz/BI-DBS/</para>
+        </references>
+    </content>
+</sproject>
